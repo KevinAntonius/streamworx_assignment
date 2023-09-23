@@ -1,0 +1,42 @@
+version: '3'
+services:
+  api1:
+    build:
+      context: ./demo_assignment api1
+    ports:
+      - "8081:8081"
+
+  api2:
+    build:
+      context: ./demo_assignment_api2
+    ports:
+      - "8080:8080"
+
+  cache:
+    image: redis:latest
+    restart: always
+    ports:
+      - '6379:6379'
+    command: redis-server --save 20 1 --loglevel warning
+
+  dbpostgresql:
+    image: postgres:12.9
+    container_name: dbpostgresql
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=streamworx_assignment
+    ports:
+      - 5432:5432
+  dbpostgresql_init:
+      image: postgres:12.9
+      container_name: dbpostgresql_init
+      command: pg_restore -h dbpostgresql --no-owner --no-privileges -d streamworx_assignment -U postgres assignment-dump.sql
+      volumes:
+        - ./assignment-dump.sql:/assignment-dump.sql
+      environment:
+        - POSTGRES_USER=postgres
+        - POSTGRES_PASSWORD=postgres
+        - POSTGRES_DB=streamworx_assignment
+      depends_on:
+        - dbpostgresql
