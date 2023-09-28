@@ -1,42 +1,49 @@
 version: '3'
 services:
+  dbpostgresql:
+    image: postgres:latest
+    container_name: postgres-container
+    environment:
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: streamworx_assignment
+    networks:
+      - mynetwork
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./assignment-dump.sql:/docker-entrypoint-initdb.d/assignment-dump.sql
+
   api1:
     build:
       context: ./demo_assignment api1
+    container_name: api1-container
     ports:
       - "8081:8081"
+    depends_on:
+      - dbpostgresql
+    networks:
+      - mynetwork
 
   api2:
     build:
       context: ./demo_assignment_api2
+    container_name: api2-container
     ports:
       - "8080:8080"
+    depends_on:
+      - dbpostgresql
+    networks:
+      - mynetwork
 
   cache:
     image: redis:latest
-    restart: always
+    container_name: redis-container
     ports:
-      - '6379:6379'
-    command: redis-server --save 20 1 --loglevel warning
-
-  dbpostgresql:
-    image: postgres:12.9
-    container_name: dbpostgresql
-    environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=streamworx_assignment
-    ports:
-      - 5432:5432
-  dbpostgresql_init:
-      image: postgres:12.9
-      container_name: dbpostgresql_init
-      command: pg_restore -h dbpostgresql --no-owner --no-privileges -d streamworx_assignment -U postgres assignment-dump.sql
-      volumes:
-        - ./assignment-dump.sql:/assignment-dump.sql
-      environment:
-        - POSTGRES_USER=postgres
-        - POSTGRES_PASSWORD=postgres
-        - POSTGRES_DB=streamworx_assignment
-      depends_on:
-        - dbpostgresql
+      - "6379:6379"
+    volumes:
+      - ./redis-data:/data
+    command: redis-server
+    networks:
+      - mynetwork
+networks:
+  mynetwork:

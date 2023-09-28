@@ -35,7 +35,7 @@ public class DataService {
 
     public List<PostDataPayloadDTO> getPostDataByUserId(Long userId){
         ResponseEntity<List<PostDataPayloadDTO>> response =
-                rest.exchange("http://172.24.32.1:8080/api/data/get/"+userId,
+                rest.exchange("http://api2-container:8080/api/data/get/"+userId,
                         HttpMethod.GET, null, new ParameterizedTypeReference<List<PostDataPayloadDTO>>() {
                         });
         return response.getBody();
@@ -53,6 +53,8 @@ public class DataService {
         HashOperations<String, String, String> hashOps = redisTemplate.opsForHash();
         UserDataPayloadDTO result = new UserDataPayloadDTO();
         String jsonMainData = hashOps.get(Long.toString(userId), "main_data");
+        System.out.println("HashOps: ");
+        System.out.println(hashOps.size(Long.toString(userId)));
         ObjectMapper mapper = new ObjectMapper();
         TypeReference<HashMap<String,Object>> typeRef
                 = new TypeReference<HashMap<String,Object>>() {};
